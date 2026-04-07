@@ -14,7 +14,7 @@ graph TD
     B -->|Display| D[OpenCV Window]
 ```
 
-- **核心客户端 (go2_video_client.cpp)**: 负责初始化 Unitree SDK2 的 `VideoClient`，建立与机器人的通信，并循环获取视频帧。
+- **核心客户端 (src/go2_video_client.cpp)**: 负责初始化 Unitree SDK2 的 `VideoClient`，建立与机器人的通信，实现视频流的实时获取与显示，并提供图片抓拍功能（按 `s` 键保存）。
 - **图像处理模块 (LineProcessor)**: 位于 `include/` 和 `src/` 目录下，作为独立库编译，封装了各类图像滤波、二值化及形态学处理逻辑。
 - **依赖管理**: 通过 `CMakeLists.txt` 集成 Unitree SDK2 及其底层 DDS 通信库，并依赖 OpenCV 进行图像矩阵运算。
 
