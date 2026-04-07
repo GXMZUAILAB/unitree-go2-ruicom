@@ -41,7 +41,7 @@ graph TD
 
 ## 环境准备
 
-为了方便 AI 阅读 Unitree_SDK2 官方示例和接口给，建议在仓库根目录下创建到 SDK 的软链接：
+为了方便 AI 阅读 Unitree_SDK2 官方示例和接口，以及构建需要，建议在仓库根目录下创建到 SDK 的软链接：
 
 ```bash
 ln -s /path/to/your/unitree_sdk2 ./unitree_sdk2
