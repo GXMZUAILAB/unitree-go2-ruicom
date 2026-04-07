@@ -1,22 +1,38 @@
-# Go2 Video Client
+# 睿抗四足多模态赛道 - Go2 机器狗开发仓库
 
-基于 Unitree SDK2 的 Go2 机器人实时视频客户端，用于实现视频流的获取与实时图像处理。
+本仓库专为睿抗四足多模态赛道开发，基于 Unitree SDK2 实现 Go2 机器狗的感知、决策与控制。
 
 ## 项目架构
 
-本仓库采用模块化设计，旨在解耦视频流获取与具体图像算法。
+本仓库采用模块化设计，旨在解耦视频流获取、图像算法处理与机器狗运动控制。
 
 ```mermaid
 graph TD
-    A[Go2 Robot] -->|Video Stream| B[go2_video_client]
-    B -->|Image Data| C[LineProcessor Module]
-    C -->|Processed Mask/Results| B
-    B -->|Display| D[OpenCV Window]
+    A[Go2 Robot Dog] -->|Video Stream| B[感知层: go2_video_client]
+    B -->|Image Data| C[处理层: LineProcessor Module]
+    C -->|Processed Results| B
+    B -->|Control Commands| A
 ```
 
-- **核心客户端 (src/go2_video_client.cpp)**: 负责初始化 Unitree SDK2 的 `VideoClient`，建立与机器人的通信，实现视频流的实时获取与显示，并提供图片抓拍功能（按 `s` 键保存）。
-- **图像处理模块 (LineProcessor)**: 位于 `include/` 和 `src/` 目录下，作为独立库编译，封装了各类图像滤波、二值化及形态学处理逻辑。
-- **依赖管理**: 通过 `CMakeLists.txt` 集成 Unitree SDK2 及其底层 DDS 通信库，并依赖 OpenCV 进行图像矩阵运算。
+- **感知与控制中心 (src/go2_video_client.cpp)**: 负责初始化 Unitree SDK2，建立与机器狗的通信，实现视频流获取、状态监控及运动指令下发。
+- **图像处理模块 (LineProcessor)**: 封装了各类图像滤波、二值化及形态学处理逻辑，用于识别赛道元素。
+- **依赖管理**: 通过 `CMakeLists.txt` 集成 Unitree SDK2 及其底层 DDS 通信库，并依赖 OpenCV 进行图像处理。
+
+## TODO List
+
+以下是本项目计划完成的功能清单，欢迎团队成员贡献代码：
+
+- [ ] **沿黑线寻路**
+    - [x] 图像预处理（已完成）
+    - [ ] 路径计算逻辑
+    - [ ] 机器狗运动控制耦合
+- [ ] **自动评估系统**：通过比对人工标记的数据，自动评估图像预处理算法的准确度。
+- [ ] **自动避障**：识别并绕过赛道上的障碍物。
+- [ ] **越障功能**：处理不平整地面或小型障碍。
+- [ ] **爬楼梯**：实现稳定的楼梯自主攀爬。
+- [ ] **图标识别**：识别赛道中的特定功能图标或指示牌。
+- [ ] **特殊动作执行**：根据任务需求执行打招呼、蹲下等预设动作。
+- [ ] **机械臂抓取**：实现与机器狗背负/集成机械臂的协同抓取任务。
 
 ## 依赖
 
@@ -25,7 +41,7 @@ graph TD
 
 ## 环境准备
 
-本仓库需要 Unitree SDK2。为了方便编译，请在仓库根目录下创建到 SDK 的软链接：
+为了方便 AI 阅读 Unitree_SDK2 官方示例和接口给，建议在仓库根目录下创建到 SDK 的软链接：
 
 ```bash
 ln -s /path/to/your/unitree_sdk2 ./unitree_sdk2
