@@ -10,7 +10,7 @@ int main()
     sc.SetTimeout(5.0f);
     sc.SwitchSet(true);//开启避障功能
     sc.UseRemoteCommandFromApi(true);//抢夺遥控器
-    if(SwitchGet(true)==0)
+    if(sc.SwitchGet(true)==0)
     {
         cout<<"避障功能已开启"<<endl;
     }
