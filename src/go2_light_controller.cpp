@@ -4,7 +4,7 @@
 using namespace std;
 int main(int argc, char** argv)
 {
-    std::string netInterface;
+    string netInterface;
     if (argc > 1) {
         netInterface = argv[1];
     } else {
