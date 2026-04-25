@@ -46,7 +46,7 @@ int main()
 | `setROI(cv::Rect)` | 感兴趣区域 | 空 |
 | `setBlurSize(int)` | 高斯模糊核大小（需为奇数） | 5 |
 | `setMorphSize(int)` | 形态学操作核大小 | 3 |
-| `setMorphIterations(int erode, int dilate)` | 腐蚀/膨忙迭代次数 | 1, 2 |
+| `setMorphIterations(int erode, int dilate)` | 腐蚀/膨胀迭代次数 | 1, 2 |
 | `setHSVChannel(int)` | HSV通道选择：0-H, 1-S, 2-V | 2 (V) |
 | `setUseAdaptiveThreshold(bool)` | 启用自适应阈值 | false |
 | `getLineCenter(cv::Mat)` | 计算线条质心x坐标 | - |
