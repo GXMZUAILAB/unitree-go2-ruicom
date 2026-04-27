@@ -101,7 +101,7 @@ caution_toxic        # 第5类
 
 #### 4. **如果不提供类名文件**
 - 程序会使用默认的安全标识类名列表
-- 默认列表包含6个常见的安全标识类别
+- 默认列表包含3个常见的安全标识类别
 - 如果您的模型类别不同，必须提供正确的类名文件
 
 #### 5. **创建类名文件**
@@ -155,9 +155,8 @@ Loaded classes: caution_shock caution_oxidizer caution_radiation ...
   - `caution_shock`: 红色
   - `caution_oxidizer`: 黄色
   - `caution_radiation`: 蓝色
-  - `caution_corrosive`: 绿色
-  - `caution_flammable`: 洋红色
-  - `caution_toxic`: 青色
+  - `first_mark`: 绿色
+  - `second_mark`: 品红
 
 ### 2. **标签显示**
 - 边界框上方显示类别名称和置信度百分比

@@ -109,28 +109,6 @@ private:
     void preprocess(const cv::Mat& frame, cv::Mat& blob);
 
     /**
-     * @brief 从网络输出中提取边界框
-     * @param output 网络输出的原始张量
-     * @param frameSize 原始图像的尺寸
-     * @return std::vector<cv::Rect> 边界框列表
-     */
-    std::vector<cv::Rect> getBoundingBoxes(const cv::Mat& output, const cv::Size& frameSize);
-
-    /**
-     * @brief 从网络输出中提取类别 ID 列表
-     * @param output 网络输出的原始张量
-     * @return std::vector<int> 类别 ID 列表
-     */
-    std::vector<int> getClassIds(const cv::Mat& output);
-
-    /**
-     * @brief 从网络输出中提取置信度列表
-     * @param output 网络输出的原始张量
-     * @return std::vector<float> 置信度列表
-     */
-    std::vector<float> getConfidences(const cv::Mat& output);
-
-    /**
      * @brief 应用非极大值抑制（NMS），去除重叠的检测框
      * @param boxes 所有候选边界框
      * @param confidences 各边界框对应的置信度

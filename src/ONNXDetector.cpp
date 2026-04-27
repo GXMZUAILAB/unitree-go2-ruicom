@@ -148,132 +148,64 @@ std::vector<std::string> ONNXDetector::getOutputsNames()
 }
 
 /**
- * @brief 从网络输出中提取边界框
- * @param output 网络输出的原始张量
- * @param frameSize 原始图像的尺寸
- * @return std::vector<cv::Rect> 边界框列表
+ * @brief 单次遍历网络输出，同时提取边界框、类别ID和置信度（避免三重重复遍历）
  */
-std::vector<cv::Rect> ONNXDetector::getBoundingBoxes(const cv::Mat& output, const cv::Size& frameSize)
+static void parseOutput(
+    const cv::Mat& output,
+    float confidenceThreshold,
+    const cv::Size& frameSize,
+    std::vector<cv::Rect>& boxes,
+    std::vector<int>& classIds,
+    std::vector<float>& confidences)
 {
-    std::vector<cv::Rect> boxes;
-
-    // 输出格式为 YOLO 格式: [batch, num_detections, 85]
-    // 其中 85 = [中心x, 中心y, 宽, 高, 置信度, 类别概率...]
-
-    const int numDetections = output.size[1];
-    const int numClasses = output.size[2] - 5; // 5 个值为 x, y, w, h, confidence
-
-    for (int i = 0; i < numDetections; ++i) {
-        float confidence = output.at<float>(0, i, 4);
-
-        if (confidence > confidenceThreshold_) {
-            // 找出最大概率的类别
-            int classId = 0;
-            float maxClassProb = 0.0f;
-            for (int j = 0; j < numClasses; ++j) {
-                float classProb = output.at<float>(0, i, 5 + j);
-                if (classProb > maxClassProb) {
-                    maxClassProb = classProb;
-                    classId = j;
-                }
-            }
-
-            float finalConfidence = confidence * maxClassProb;
-            if (finalConfidence > confidenceThreshold_) {
-                // 获取归一化的边界框坐标（值域 0-1）
-                float centerX = output.at<float>(0, i, 0);
-                float centerY = output.at<float>(0, i, 1);
-                float width = output.at<float>(0, i, 2);
-                float height = output.at<float>(0, i, 3);
-
-                // 转换为像素坐标
-                int left = static_cast<int>((centerX - width / 2) * frameSize.width);
-                int top = static_cast<int>((centerY - height / 2) * frameSize.height);
-                int right = static_cast<int>((centerX + width / 2) * frameSize.width);
-                int bottom = static_cast<int>((centerY + height / 2) * frameSize.height);
-
-                // 确保坐标不超出图像边界
-                left = std::max(0, left);
-                top = std::max(0, top);
-                right = std::min(frameSize.width - 1, right);
-                bottom = std::min(frameSize.height - 1, bottom);
-
-                boxes.push_back(cv::Rect(left, top, right - left, bottom - top));
-            }
-        }
-    }
-
-    return boxes;
-}
-
-/**
- * @brief 从网络输出中提取类别 ID 列表
- * @param output 网络输出的原始张量
- * @return std::vector<int> 类别 ID 列表
- */
-std::vector<int> ONNXDetector::getClassIds(const cv::Mat& output)
-{
-    std::vector<int> classIds;
-
     const int numDetections = output.size[1];
     const int numClasses = output.size[2] - 5;
 
-    for (int i = 0; i < numDetections; ++i) {
-        float confidence = output.at<float>(0, i, 4);
-
-        if (confidence > confidenceThreshold_) {
-            int classId = 0;
-            float maxClassProb = 0.0f;
-            for (int j = 0; j < numClasses; ++j) {
-                float classProb = output.at<float>(0, i, 5 + j);
-                if (classProb > maxClassProb) {
-                    maxClassProb = classProb;
-                    classId = j;
-                }
-            }
-
-            float finalConfidence = confidence * maxClassProb;
-            if (finalConfidence > confidenceThreshold_) {
-                classIds.push_back(classId);
-            }
-        }
-    }
-
-    return classIds;
-}
-
-/**
- * @brief 从网络输出中提取置信度列表
- * @param output 网络输出的原始张量
- * @return std::vector<float> 置信度列表
- */
-std::vector<float> ONNXDetector::getConfidences(const cv::Mat& output)
-{
-    std::vector<float> confidences;
-
-    const int numDetections = output.size[1];
-    const int numClasses = output.size[2] - 5;
+    boxes.clear();
+    classIds.clear();
+    confidences.clear();
+    boxes.reserve(numDetections);
+    classIds.reserve(numDetections);
+    confidences.reserve(numDetections);
 
     for (int i = 0; i < numDetections; ++i) {
         float confidence = output.at<float>(0, i, 4);
+        if (confidence <= confidenceThreshold)
+            continue;
 
-        if (confidence > confidenceThreshold_) {
-            float maxClassProb = 0.0f;
-            for (int j = 0; j < numClasses; ++j) {
-                float classProb = output.at<float>(0, i, 5 + j);
-                if (classProb > maxClassProb) {
-                    maxClassProb = classProb;
-                }
-            }
-
-            float finalConfidence = confidence * maxClassProb;
-            if (finalConfidence > confidenceThreshold_) {
-                confidences.push_back(finalConfidence);
+        int classId = 0;
+        float maxClassProb = 0.0f;
+        for (int j = 0; j < numClasses; ++j) {
+            float classProb = output.at<float>(0, i, 5 + j);
+            if (classProb > maxClassProb) {
+                maxClassProb = classProb;
+                classId = j;
             }
         }
-    }
 
-    return confidences;
+        float finalConfidence = confidence * maxClassProb;
+        if (finalConfidence <= confidenceThreshold)
+            continue;
+
+        float centerX = output.at<float>(0, i, 0);
+        float centerY = output.at<float>(0, i, 1);
+        float width   = output.at<float>(0, i, 2);
+        float height  = output.at<float>(0, i, 3);
+
+        int left   = static_cast<int>((centerX - width / 2) * frameSize.width);
+        int top    = static_cast<int>((centerY - height / 2) * frameSize.height);
+        int right  = static_cast<int>((centerX + width / 2) * frameSize.width);
+        int bottom = static_cast<int>((centerY + height / 2) * frameSize.height);
+
+        left   = std::max(0, left);
+        top    = std::max(0, top);
+        right  = std::min(frameSize.width - 1, right);
+        bottom = std::min(frameSize.height - 1, bottom);
+
+        boxes.emplace_back(left, top, right - left, bottom - top);
+        classIds.push_back(classId);
+        confidences.push_back(finalConfidence);
+    }
 }
 
 /**
@@ -321,10 +253,11 @@ std::vector<DetectionResult> ONNXDetector::detect(const cv::Mat& image)
         // 取第一个输出层的结果
         cv::Mat& output = outputs[0];
 
-        // 分别提取边界框、类别 ID 和置信度
-        std::vector<cv::Rect> boxes = getBoundingBoxes(output, image.size());
-        std::vector<int> classIds = getClassIds(output);
-        std::vector<float> confidences = getConfidences(output);
+        // 单次遍历提取边界框、类别ID和置信度（避免三重重复遍历）
+        std::vector<cv::Rect> boxes;
+        std::vector<int> classIds;
+        std::vector<float> confidences;
+        parseOutput(output, confidenceThreshold_, image.size(), boxes, classIds, confidences);
 
         // 应用 NMS 去除重叠框
         std::vector<int> indices = applyNMS(boxes, confidences);
